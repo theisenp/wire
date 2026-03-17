@@ -152,21 +152,18 @@ class WirePlugin : Plugin<Project> {
       task.group = GROUP
       task.description = "Generate protobuf implementation for ${source.name}"
 
-      var addedSourcesDependencies = false
-      // Flatten all the input files here. Changes to any of them will cause the task to re-run.
       for (rootSet in protoSourceProtoRootSets) {
-        task.source(rootSet.configuration)
-        if (!rootSet.isEmpty) {
-          // Use the isEmpty flag to avoid resolving the configuration eagerly
-          addedSourcesDependencies = true
-        }
+        task.protoSourceFiles.from(rootSet.configuration)
       }
+
+      val addedSourcesDependencies = protoSourceProtoRootSets.any { !it.isEmpty }
       // We only want to add ProtoPath sources if we have other sources already. The WireTask
-      // would otherwise run even through we have no sources.
+      // would otherwise run even though we have no sources.
       if (addedSourcesDependencies) {
         for (rootSet in protoPathProtoRootSets) {
-          task.source(rootSet.configuration)
+          task.protoPathFiles.from(rootSet.configuration)
         }
+        task.protoPathFiles.from(project.configurations.getByName("protoProjectDependenciesJvm"))
       }
 
       targets
@@ -182,9 +179,6 @@ class WirePlugin : Plugin<Project> {
           )
           task.outputDirectoriesList.add(dir)
         }
-      task.protoSourceConfiguration.setFrom(project.configurations.getByName("protoSource"))
-      task.protoPathConfiguration.setFrom(project.configurations.getByName("protoPath"))
-      task.projectDependenciesJvmConfiguration.setFrom(project.configurations.getByName("protoProjectDependenciesJvm"))
       if (protoTarget != null) {
         task.protoLibraryOutput.set(project.file(protoTarget.outDirectory))
       }

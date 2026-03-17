@@ -23,14 +23,15 @@ import com.squareup.wire.schema.WireRun
 import com.squareup.wire.wireVersion
 import javax.inject.Inject
 import okio.FileSystem
+import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileTree
 import org.gradle.api.internal.file.FileOperations
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -38,17 +39,14 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
-import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 
 @CacheableTask
 abstract class WireTask @Inject constructor(
   private val objects: ObjectFactory,
   private val fileOperations: FileOperations,
-) : SourceTask() {
+) : DefaultTask() {
 
   @get:Internal
   internal val outputDirectoriesList: MutableList<DirectoryProperty> = mutableListOf()
@@ -57,20 +55,24 @@ abstract class WireTask @Inject constructor(
   val outputDirectories: ConfigurableFileCollection
     get() = objects.fileCollection().from(outputDirectoriesList)
 
-  /** This input only exists to signal task dependencies. The files are read via [source]. */
+  /**
+   * The collection of proto source files. This collection may include any valid gradle dependency
+   * type, including directories, jars, and project dependencies. Therefore, it needs to be
+   * represented as a gradle Classpath to ensure cache-friendly behaviour.
+   */
   @get:InputFiles
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  abstract val protoSourceConfiguration: ConfigurableFileCollection
+  @get:Classpath
+  @get:SkipWhenEmpty
+  abstract val protoSourceFiles: ConfigurableFileCollection
 
-  /** Same as above: files are read via [source]. */
+  /**
+   * The collection of proto path files. This collection may include any valid gradle dependency
+   * type, including directories, jars, and project dependencies. Therefore, it needs to be
+   * represented as a gradle Classpath to ensure cache-friendly behaviour.
+   */
   @get:InputFiles
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  abstract val protoPathConfiguration: ConfigurableFileCollection
-
-  /** Same as above: files are read via [source]. */
-  @get:InputFiles
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  abstract val projectDependenciesJvmConfiguration: ConfigurableFileCollection
+  @get:Classpath
+  abstract val protoPathFiles: ConfigurableFileCollection
 
   @get:Optional
   @get:OutputDirectory
@@ -192,12 +194,5 @@ abstract class WireTask @Inject constructor(
       fs = if (dryRun.get()) DryRunFileSystem(FileSystem.SYSTEM) else FileSystem.SYSTEM,
       logger = GradleWireLogger,
     )
-  }
-
-  @InputFiles
-  @SkipWhenEmpty
-  @PathSensitive(PathSensitivity.RELATIVE)
-  override fun getSource(): FileTree {
-    return super.getSource()
   }
 }
