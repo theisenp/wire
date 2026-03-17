@@ -184,6 +184,18 @@ class WirePlugin : Plugin<Project> {
       }
       task.sourceInput.set(project.provider { protoSourceProtoRootSets.inputLocations })
       task.protoInput.set(project.provider { protoPathProtoRootSets.inputLocations })
+      task.sourceIncludes.set(project.provider {
+        protoSourceProtoRootSets.flatMap { it.includes.ifEmpty { listOf("**/*.proto") } }
+      })
+      task.sourceExcludes.set(project.provider {
+        protoSourceProtoRootSets.flatMap { it.excludes }
+      })
+      task.protoIncludes.set(project.provider {
+        protoPathProtoRootSets.flatMap { it.includes.ifEmpty { listOf("**/*.proto") } }
+      })
+      task.protoExcludes.set(project.provider {
+        protoPathProtoRootSets.flatMap { it.excludes }
+      })
       task.roots.set(extension.roots.toList())
       task.prunes.set(extension.prunes.toList())
       task.moves.set(extension.moves.toList())

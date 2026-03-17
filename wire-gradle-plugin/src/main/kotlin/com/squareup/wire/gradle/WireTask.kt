@@ -82,11 +82,27 @@ abstract class WireTask @Inject constructor(
   val pluginVersion: Property<String> = objects.property(String::class.java)
     .convention(wireVersion)
 
-  @get:Nested
+  @get:Internal
   internal abstract val sourceInput: ListProperty<InputLocation>
 
-  @get:Nested
+  @get:Internal
   internal abstract val protoInput: ListProperty<InputLocation>
+
+  /** Source files to include, following [PatternFilterable] syntax. */
+  @get:Input
+  internal abstract val sourceIncludes: ListProperty<String>
+
+  /** Source files to exclude, following [PatternFilterable] syntax. */
+  @get:Input
+  internal abstract val sourceExcludes: ListProperty<String>
+
+  /** Proto path files to include, following [PatternFilterable] syntax. */
+  @get:Input
+  internal abstract val protoIncludes: ListProperty<String>
+
+  /** Proto path files to exclude, following [PatternFilterable] syntax. */
+  @get:Input
+  internal abstract val protoExcludes: ListProperty<String>
 
   @get:Input
   abstract val roots: ListProperty<String>
