@@ -16,23 +16,9 @@
 package com.squareup.wire.gradle
 
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
 
 internal data class InputLocation(
-  /**
-   * The collection of files to which the below includes and excludes apply. This collection may include
-   * any valid gradle dependency type, including directories, jars, and project dependencies. Therefore,
-   * it needs to be represented as a gradle Classpath to ensure cache-friendly behaviour.
-   */
-  @get:Classpath
   val configuration: FileCollection,
-
-  /** Files to include, following `PatternFilterable` syntax. */
-  @get:Input
   val includes: List<String>,
-
-  /** Files to exclude, following `PatternFilterable` syntax. */
-  @get:Input
   val excludes: List<String>,
 )
